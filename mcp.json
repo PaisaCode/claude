@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "figma-remote-mcp": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "excalidraw": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--network",
+        "host",
+        "-e",
+        "EXPRESS_SERVER_URL=http://127.0.0.1:3000",
+        "-e",
+        "ENABLE_CANVAS_SYNC=true",
+        "mcp-excalidraw:latest"
+      ]
+    },
+    "tnm-openapi": {
+      "command": "/Users/pariwork/Documents/work/tnm-cli/build/mcp-server.js"
+    },
+    "favicon-generator": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--project",
+        "/Users/pariwork/documents/work/notion-agent",
+        "python",
+        "/Users/pariwork/Documents/work/notion-agent/favicon_mcp_server.py"
+      ]
+    }
+  }
+}

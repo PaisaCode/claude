@@ -1,0 +1,14 @@
+#!/bin/bash
+# Generate commit message and push changes
+# Usage: commit [--only-selected]
+#
+# Examples:
+#   commit                  # Stage all, commit, push
+#   commit --only-selected  # Commit only staged files, push
+
+# Run Claude with the commit command
+if [ "$1" = "--only-selected" ]; then
+    claude -p "/commit --only-selected"
+else
+    claude -p "/commit"
+fi

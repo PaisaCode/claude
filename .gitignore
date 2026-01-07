@@ -1,0 +1,16 @@
+# Ignore everything by default
+*
+
+# Track shared team resources
+!.gitignore
+!bin/
+!bin/**
+!commands/
+!commands/**
+!hooks/
+!hooks/**
+!mcp.json
+
+# Ignore personal/local files even in tracked directories
+*.local
+*.local.*

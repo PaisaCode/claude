@@ -1,0 +1,22 @@
+#!/bin/bash
+# Add code from current project to the TN SPA Bootstrapper
+# Usage: add-to-bootstrapper <file_or_description>
+#
+# Examples:
+#   add-to-bootstrapper client/src/services/notifications.ts
+#   add-to-bootstrapper "the pagination hook"
+
+if [ $# -eq 0 ]; then
+    echo "Usage: add-to-bootstrapper <file_or_description>"
+    echo ""
+    echo "Examples:"
+    echo "  add-to-bootstrapper client/src/services/notifications.ts"
+    echo "  add-to-bootstrapper \"the new pagination hook we built\""
+    exit 1
+fi
+
+# Join all arguments into a single string
+ARGS="$*"
+
+# Run Claude with the add-to-bootstrapper command
+claude -p "/add-to-bootstrapper $ARGS"

@@ -1,0 +1,63 @@
+#!/bin/bash
+# Sync MCP server configuration between global config and version-controlled file
+# Usage: sync-mcp [export|import]
+#
+# export (default): Copy from ~/.claude.json to ~/.claude/mcp.json
+# import: Copy from ~/.claude/mcp.json to ~/.claude.json
+
+GLOBAL_CONFIG="$HOME/.claude.json"
+LOCAL_MCP="$HOME/.claude/mcp.json"
+
+case "${1:-export}" in
+    export)
+        echo "Exporting MCP servers from $GLOBAL_CONFIG to $LOCAL_MCP..."
+
+        if [ ! -f "$GLOBAL_CONFIG" ]; then
+            echo "Error: $GLOBAL_CONFIG not found"
+            exit 1
+        fi
+
+        # Extract mcpServers and wrap in proper format
+        jq '{ mcpServers: .mcpServers }' "$GLOBAL_CONFIG" > "$LOCAL_MCP"
+
+        echo "Exported MCP configuration:"
+        jq -r '.mcpServers | keys[]' "$LOCAL_MCP" | while read server; do
+            echo "  - $server"
+        done
+        echo ""
+        echo "Saved to $LOCAL_MCP"
+        ;;
+
+    import)
+        echo "Importing MCP servers from $LOCAL_MCP to $GLOBAL_CONFIG..."
+
+        if [ ! -f "$LOCAL_MCP" ]; then
+            echo "Error: $LOCAL_MCP not found"
+            exit 1
+        fi
+
+        if [ ! -f "$GLOBAL_CONFIG" ]; then
+            echo "Error: $GLOBAL_CONFIG not found"
+            exit 1
+        fi
+
+        # Merge mcpServers from local file into global config
+        jq -s '.[0] * { mcpServers: .[1].mcpServers }' "$GLOBAL_CONFIG" "$LOCAL_MCP" > "${GLOBAL_CONFIG}.tmp"
+        mv "${GLOBAL_CONFIG}.tmp" "$GLOBAL_CONFIG"
+
+        echo "Imported MCP configuration:"
+        jq -r '.mcpServers | keys[]' "$LOCAL_MCP" | while read server; do
+            echo "  - $server"
+        done
+        echo ""
+        echo "Updated $GLOBAL_CONFIG"
+        ;;
+
+    *)
+        echo "Usage: sync-mcp [export|import]"
+        echo ""
+        echo "  export  Copy MCP servers from ~/.claude.json to ~/.claude/mcp.json (default)"
+        echo "  import  Copy MCP servers from ~/.claude/mcp.json to ~/.claude.json"
+        exit 1
+        ;;
+esac
