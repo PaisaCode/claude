@@ -50,10 +50,41 @@ Present the open PRs to the user with AskUserQuestion:
 
 ### Step 4: Prepare the Branch
 
-**If updating an existing PR:**
+**First, check for uncommitted changes and current branch:**
+```bash
+cd <bootstrapper_path>
+git status --porcelain
+git branch --show-current
+```
+
+If there are uncommitted changes (non-empty output from `git status --porcelain`), use AskUserQuestion to ask the user:
+- **Stash changes**: Temporarily save changes with `git stash push -m "WIP: before add-to-bootstrapper"`
+- **Commit changes**: Commit the current changes before switching branches
+- **Abort**: Stop and let the user handle the changes manually
+
+**If user chooses to stash:**
+```bash
+cd <bootstrapper_path>
+git stash push -m "WIP: before add-to-bootstrapper"
+```
+
+**If user chooses to commit:**
+Ask the user for a commit message, then:
+```bash
+cd <bootstrapper_path>
+git add -A
+git commit -m "<user_provided_message>"
+```
+
+**Then, ensure we're up to date with main:**
 ```bash
 cd <bootstrapper_path>
 git fetch origin
+```
+
+**If updating an existing PR:**
+```bash
+cd <bootstrapper_path>
 gh pr checkout <pr_number>
 git pull
 ```
@@ -61,7 +92,6 @@ git pull
 **If creating a new branch:**
 ```bash
 cd <bootstrapper_path>
-git fetch origin
 git checkout main
 git pull origin main
 git checkout -b feature/<descriptive-name>
