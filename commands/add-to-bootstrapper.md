@@ -147,7 +147,43 @@ Note: The bootstrapper uses cookiecutter templating. You may need to:
 
 1. Copy/adapt the code to the appropriate location in the bootstrapper
 2. Update any related files (imports, exports, index files)
-3. If the feature requires new dependencies, update package.json
+3. If the feature requires new dependencies, update package.json or pyproject.toml
+
+**If client-side changes require lock file updates (new dependencies added):**
+```bash
+cd <bootstrapper_path>/{{cookiecutter.project_slug}}/client
+npm install
+```
+This will update the package-lock.json with the new dependencies.
+
+**If backend changes require lock file updates (new dependencies added):**
+
+The bootstrapper uses cookiecutter templating for the project name, but uv/pip needs a valid name to sync. Follow these steps:
+
+1. First, temporarily update pyproject.toml to use a valid project name:
+```bash
+cd <bootstrapper_path>/{{cookiecutter.project_slug}}/server
+# Change the name from cookiecutter template to a valid name for syncing
+```
+
+Edit pyproject.toml:
+```diff
+- name = "{{cookiecutter.project_slug}}"
++ name = "my-project"
+```
+
+2. Run uv sync to update the lock file:
+```bash
+uv sync
+```
+
+3. **Important**: Revert the pyproject.toml name change back to the cookiecutter binding:
+```diff
+- name = "my-project"
++ name = "{{cookiecutter.project_slug}}"
+```
+
+This is necessary because the Heroku build expects `my-project` as a valid Python package name during the sync, but the bootstrapper needs the cookiecutter template variable for project generation.
 
 ### Step 8: Commit and Push
 
@@ -182,6 +218,11 @@ gh pr create --title "feat: <feature_title>" --body "## Summary
 Generated with Claude Code"
 ```
 
+**After creating the PR, add the `in_progress` label:**
+```bash
+gh pr edit <pr_number> --add-label "in_progress"
+```
+
 **If updating existing PR:**
 The push in Step 8 will automatically update the PR. Optionally add a comment:
 ```bash
@@ -189,6 +230,11 @@ gh pr comment <pr_number> --body "Added <feature> to this PR
 
 Changes:
 - <list changes>"
+```
+
+Note: The PR should already have the `in_progress` label from when it was created. If not, add it:
+```bash
+gh pr edit <pr_number> --add-label "in_progress"
 ```
 
 ### Step 10: Report Results
