@@ -54,6 +54,8 @@ Based on the feature description, determine:
 
 ### Step 3: Search for Relevant Examples
 
+**IMPORTANT:** Do NOT write actual implementation code. Only provide file paths and brief descriptions. Short pseudo-code snippets are acceptable for illustrating patterns, but the engineer should write the real code themselves.
+
 Use the Task tool with Explore agent to find relevant code examples in the codebase:
 
 1. Search for similar implementations
