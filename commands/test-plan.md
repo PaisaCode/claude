@@ -1,7 +1,7 @@
 ---
 description: Generate a non-technical testing plan for human testers from a PR
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Grep, Glob
-argument-hint: [PR_NUMBER or PR_URL]
+argument-hint: [--comment] [PR_NUMBER or PR_URL]
 ---
 
 # Generate QA Testing Plan
@@ -10,19 +10,32 @@ Review changes in a PR and generate a clear, non-technical testing plan that hum
 
 ## Arguments
 
+- `--comment`: Post the test plan as a comment on the PR (optional)
 - No argument: Use the current branch's PR
 - PR number (e.g., `123`): Review that specific PR
 - PR URL: Extract PR number from URL
 
+## Examples
+
+```
+/test-plan                    # Generate plan for current branch's PR
+/test-plan 123                # Generate plan for PR #123
+/test-plan --comment          # Generate and post as comment on current PR
+/test-plan --comment 123      # Generate and post as comment on PR #123
+```
+
 ## Instructions
 
-### Step 1: Identify the PR
+### Step 1: Parse Arguments and Identify the PR
 
-If `$ARGUMENTS` is provided:
+First, check if `$ARGUMENTS` contains `--comment` flag:
+- If `--comment` is present, set `POST_COMMENT=true` and remove it from the arguments
+- Otherwise, set `POST_COMMENT=false`
+
+Then identify the PR from the remaining argument:
 - If it's a number, use it directly
 - If it's a URL, extract the PR number
-
-If no argument:
+- If no argument remains, get PR from current branch:
 ```bash
 gh pr view --json number,title,body,baseRefName,headRefName
 ```
@@ -151,3 +164,23 @@ Check that these existing features still work:
 ## Output Format
 
 Write the testing plan as a clean markdown document that can be shared directly with QA testers. The plan should be self-contained and require no additional context to follow.
+
+### Step 6: Post as PR Comment (if --comment flag was set)
+
+If `POST_COMMENT=true`, post the generated test plan as a comment on the PR:
+
+```bash
+gh pr comment <PR_NUMBER> --body "<TEST_PLAN_CONTENT>"
+```
+
+Use a HEREDOC for the body to preserve formatting:
+```bash
+gh pr comment <PR_NUMBER> --body "$(cat <<'EOF'
+## 🧪 QA Testing Plan
+
+<generated test plan content here>
+EOF
+)"
+```
+
+After posting, confirm to the user that the test plan was posted as a comment on the PR with a link to view it.

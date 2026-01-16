@@ -1,14 +1,16 @@
 #!/bin/bash
 # Generate a non-technical QA testing plan from a PR
-# Usage: test-plan [PR_NUMBER or PR_URL]
+# Usage: test-plan [--comment] [PR_NUMBER or PR_URL]
 #
 # Examples:
-#   test-plan           # Use current branch's PR
-#   test-plan 123       # Review PR #123
+#   test-plan                    # Use current branch's PR
+#   test-plan 123                # Review PR #123
+#   test-plan --comment          # Generate and post as comment on current PR
+#   test-plan --comment 123      # Generate and post as comment on PR #123
 #   test-plan https://github.com/org/repo/pull/123
 
 if [ $# -eq 0 ]; then
     claude -p "/test-plan"
 else
-    claude -p "/test-plan $1"
+    claude -p "/test-plan $*"
 fi

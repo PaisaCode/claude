@@ -127,12 +127,12 @@ Create the issue using:
 
 ```bash
 gh issue create \
-  --title "[ONBOARD] <short title based on feature>" \
+  --title "<short title based on feature>" \
   --body "$(cat <<'EOF'
 <issue body content>
 EOF
 )" \
-  --label "onboarding"
+  --label "Todo"
 ```
 
 ### Step 6: Report Results
