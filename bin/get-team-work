@@ -1,0 +1,37 @@
+# this script will take one or more args (team names) read the team.json file to find the gh username and then list out issues in a table 
+
+
+args=("$@")
+TEAM_FILE="$HOME/.claude/team.json"
+if [ ! -f "$TEAM_FILE" ]; then
+    echo "Team file not found: $TEAM_FILE"
+    exit 1
+fi
+TEAM_MEMBERS=()
+if [ ${#args[@]} -eq 0 ]; then
+    # No args, get all team members
+    TEAM_MEMBERS=($(jq -r '.team_info[].person_gh_username' "$TEAM_FILE"))
+else
+    # Get specified team members
+    for name in "${args[@]}"; do
+        username=$(jq -r --arg NAME "$name" '.team_info[] | select(.quick_find_name == $NAME) | .person_gh_username' "$TEAM_FILE")
+        if [ -n "$username" ]; then
+            TEAM_MEMBERS+=("$username")
+        else
+            echo "Warning: No GitHub username found for team member '$name'"
+        fi
+    done
+fi
+
+# search issues and prs using
+if [ ${#TEAM_MEMBERS[@]} -eq 0 ]; then
+    echo "No team members found to search."
+    exit 1
+fi
+for member in "${TEAM_MEMBERS[@]}"; do
+    if [ -n "$member" ]; then
+        SEARCH_ARGS=("--assignee=$member")
+        gh search issues --owner="thinknimble" --owner "3leafcoder" "${SEARCH_ARGS}" --state=open --include-prs
+    fi
+done
+

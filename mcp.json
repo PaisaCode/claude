@@ -38,6 +38,13 @@
         "python",
         "/Users/pariwork/Documents/work/notion-agent/favicon_mcp_server.py"
       ]
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${MCP_GH_TOKEN}"
+      }
     }
+
   }
 }
