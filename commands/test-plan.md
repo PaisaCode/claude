@@ -1,16 +1,22 @@
 ---
 description: Generate a non-technical testing plan for human testers from a PR
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Grep, Glob
-argument-hint: [--comment] [PR_NUMBER or PR_URL]
+argument-hint: [--comment] [--staging] [PR_NUMBER or PR_URL]
 ---
 
 # Generate QA Testing Plan
 
 Review changes in a PR and generate a clear, non-technical testing plan that human testers can follow.
 
+## Two Modes
+
+1. **Default (PR Review)**: Concise, focused test plan targeting only what changed in the PR. Use this when reviewing a PR before merge.
+2. **Staging (`--staging`)**: Comprehensive test plan with cross-browser, device, and regression testing. Use this after merging to staging for thorough QA.
+
 ## Arguments
 
 - `--comment`: Post the test plan as a comment on the PR (optional)
+- `--staging`: Generate comprehensive test plan for staging environment (optional)
 - No argument: Use the current branch's PR
 - PR number (e.g., `123`): Review that specific PR
 - PR URL: Extract PR number from URL
@@ -18,19 +24,22 @@ Review changes in a PR and generate a clear, non-technical testing plan that hum
 ## Examples
 
 ```
-/test-plan                    # Generate plan for current branch's PR
-/test-plan 123                # Generate plan for PR #123
+/test-plan                    # Focused plan for current branch's PR
+/test-plan 123                # Focused plan for PR #123
 /test-plan --comment          # Generate and post as comment on current PR
 /test-plan --comment 123      # Generate and post as comment on PR #123
+/test-plan --staging 123      # Comprehensive staging test plan for PR #123
+/test-plan --staging --comment 123  # Comprehensive plan, posted as comment
 ```
 
 ## Instructions
 
 ### Step 1: Parse Arguments and Identify the PR
 
-First, check if `$ARGUMENTS` contains `--comment` flag:
+First, check if `$ARGUMENTS` contains flags:
 - If `--comment` is present, set `POST_COMMENT=true` and remove it from the arguments
-- Otherwise, set `POST_COMMENT=false`
+- If `--staging` is present, set `STAGING_MODE=true` and remove it from the arguments
+- Otherwise, set both to `false`
 
 Then identify the PR from the remaining argument:
 - If it's a number, use it directly
@@ -73,11 +82,50 @@ Focus on:
 
 ### Step 5: Generate the Testing Plan
 
-Create a testing plan with these sections:
+Generate the appropriate test plan based on the mode:
 
 ---
 
-## Testing Plan for PR #<number>: <title>
+## DEFAULT MODE (PR Review) - Concise & Focused
+
+Use this template when `STAGING_MODE=false`. Keep it tight and focused only on what changed.
+
+```markdown
+## Test Plan: PR #<number> - <title>
+
+### What Changed
+[1-2 sentence summary of the PR's purpose]
+
+### Test Checklist
+
+#### [Changed Area 1]
+- [ ] [Specific test step with expected outcome]
+- [ ] [Another test step]
+
+#### [Changed Area 2]
+- [ ] [Specific test step with expected outcome]
+
+### Quick Smoke Tests
+- [ ] [Verify closely related feature still works]
+- [ ] [Another quick sanity check]
+```
+
+**Guidelines for Default Mode:**
+- Maximum 10-15 test items total
+- Only test what the PR actually changes
+- No browser/device matrix testing
+- No exhaustive edge cases
+- Skip regression testing of unrelated features
+- Each test item should be one clear action + expected result
+
+---
+
+## STAGING MODE (Comprehensive) - Full QA
+
+Use this template when `STAGING_MODE=true`. This is for thorough testing after merge to staging.
+
+```markdown
+## Staging Test Plan: PR #<number> - <title>
 
 ### Summary
 [2-3 sentences explaining what this PR does in plain language]
@@ -119,15 +167,52 @@ Check that these existing features still work:
 - [ ] [Unusual scenario 1]
 - [ ] [Unusual scenario 2]
 
-### Different Environments/Conditions
+### Browser & Device Testing
 
-- [ ] Test on mobile viewport
-- [ ] Test with slow network (if applicable)
-- [ ] Test as different user roles (if applicable)
+Test the changed features on:
+
+**Desktop Browsers:**
+- [ ] Chrome (latest)
+- [ ] Firefox (latest)
+- [ ] Safari (latest)
+- [ ] Edge (latest)
+
+**Mobile/Tablet:**
+- [ ] iOS Safari (iPhone)
+- [ ] iOS Safari (iPad)
+- [ ] Android Chrome (phone)
+- [ ] Android Chrome (tablet)
+
+**Responsive Viewports:**
+- [ ] Mobile (375px width)
+- [ ] Tablet (768px width)
+- [ ] Desktop (1280px width)
+- [ ] Large desktop (1920px width)
+
+### Network & Performance Conditions
+
+- [ ] Test on slow 3G network (use browser throttling)
+- [ ] Test with network offline then reconnecting
+- [ ] Verify loading states appear appropriately
+
+### Accessibility Checks
+
+- [ ] Keyboard navigation works for new/changed elements
+- [ ] Screen reader announces changes correctly
+- [ ] Color contrast meets WCAG AA standards
+- [ ] Focus states are visible
+
+### User Roles & Permissions (if applicable)
+
+- [ ] Test as admin user
+- [ ] Test as regular user
+- [ ] Test as guest/unauthenticated user
+- [ ] Verify permission-restricted features are properly gated
 
 ### Notes for Testers
 
 [Any additional context, known limitations, or special instructions]
+```
 
 ---
 
@@ -177,6 +262,16 @@ Use a HEREDOC for the body to preserve formatting:
 ```bash
 gh pr comment <PR_NUMBER> --body "$(cat <<'EOF'
 ## 🧪 QA Testing Plan
+
+<generated test plan content here>
+EOF
+)"
+```
+
+For staging mode, use a different header:
+```bash
+gh pr comment <PR_NUMBER> --body "$(cat <<'EOF'
+## 🧪 Staging QA Testing Plan (Comprehensive)
 
 <generated test plan content here>
 EOF
