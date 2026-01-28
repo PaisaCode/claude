@@ -80,6 +80,25 @@ Focus on:
 - Navigation and routing changes
 - Permission/access control changes
 
+### Step 4.5: Review Test Data Users
+
+Search for and read the `create_test_data` file in the project to understand available test users.
+
+Use Glob to find the file:
+- Pattern: `**/*create_test_data*`
+
+Read the file(s) found and identify:
+1. What user types/roles are available (e.g., admin, regular user, guest, specific roles)
+2. What credentials or identifiers are used for each user type
+3. Any special permissions or states associated with different users
+
+Based on the PR changes, determine:
+- Which specific user types are needed to test the changes
+- Whether the existing test users are sufficient for testing the PR
+- If new user types or test data updates are required
+
+**IMPORTANT:** If the `create_test_data` file needs updates to support testing this PR (e.g., missing user types, roles, or permissions), note this for the alert section.
+
 ### Step 5: Generate the Testing Plan
 
 Generate the appropriate test plan based on the mode:
@@ -96,18 +115,31 @@ Use this template when `STAGING_MODE=false`. Keep it tight and focused only on w
 ### What Changed
 [1-2 sentence summary of the PR's purpose]
 
+### Test Accounts
+[List the specific test users needed from create_test_data, with their role/purpose]
+- **[Role Name]**: [username/email] - [why this user is needed for testing]
+- **[Another Role]**: [username/email] - [why this user is needed for testing]
+
 ### Test Checklist
 
 #### [Changed Area 1]
+**Sign in as: [specific user from test accounts]**
 - [ ] [Specific test step with expected outcome]
 - [ ] [Another test step]
 
 #### [Changed Area 2]
+**Sign in as: [specific user from test accounts]**
 - [ ] [Specific test step with expected outcome]
 
 ### Quick Smoke Tests
 - [ ] [Verify closely related feature still works]
 - [ ] [Another quick sanity check]
+
+### :fire_extinguisher: Alerts
+
+[Include this section ONLY if create_test_data needs updates]
+
+- **Test Data Update Needed**: [Describe what's missing or needs to be changed]
 ```
 
 **Guidelines for Default Mode:**
@@ -117,6 +149,8 @@ Use this template when `STAGING_MODE=false`. Keep it tight and focused only on w
 - No exhaustive edge cases
 - Skip regression testing of unrelated features
 - Each test item should be one clear action + expected result
+- Always specify which test user to sign in as for each test area
+- Reference actual usernames/emails from create_test_data, not generic roles
 
 ---
 
@@ -133,9 +167,18 @@ Use this template when `STAGING_MODE=true`. This is for thorough testing after m
 ### What Changed
 [Bullet list of user-visible changes, no technical jargon]
 
+### Test Accounts Required
+[List ALL specific test users from create_test_data needed for this test plan]
+| Role | Username/Email | Purpose |
+|------|----------------|---------|
+| [Role Name] | [username/email] | [Why needed for testing] |
+| [Another Role] | [username/email] | [Why needed for testing] |
+
 ### Areas to Test
 
 #### 1. [Feature/Area Name]
+
+**Sign in as: [specific user from test accounts table]**
 
 **Setup:**
 - [Any prerequisites like test accounts, data needed]
@@ -152,6 +195,9 @@ Use this template when `STAGING_MODE=true`. This is for thorough testing after m
 - [Edge cases or potential issues]
 
 #### 2. [Another Feature/Area]
+
+**Sign in as: [specific user from test accounts table]**
+
 [Repeat structure]
 
 ---
@@ -202,12 +248,22 @@ Test the changed features on:
 - [ ] Color contrast meets WCAG AA standards
 - [ ] Focus states are visible
 
-### User Roles & Permissions (if applicable)
+### User Roles & Permissions
 
-- [ ] Test as admin user
-- [ ] Test as regular user
-- [ ] Test as guest/unauthenticated user
-- [ ] Verify permission-restricted features are properly gated
+Test the changed features with each relevant user type from the Test Accounts table above:
+
+- [ ] **[Admin User]**: Sign in as [specific admin email] and verify admin-only features
+- [ ] **[Regular User]**: Sign in as [specific user email] and verify standard user access
+- [ ] **[Guest/Unauthenticated]**: Test without signing in to verify public access and restrictions
+- [ ] Verify permission-restricted features are properly gated for each role
+
+### :fire_extinguisher: Alerts
+
+[Include this section ONLY if there are issues with test data or setup]
+
+- [ ] **Test Data Update Needed**: [Describe what needs to be added/changed in create_test_data]
+- [ ] **Missing User Type**: [Describe the user role/type that doesn't exist but is needed]
+- [ ] **Other Blockers**: [Any other setup issues that need resolution before testing]
 
 ### Notes for Testers
 
@@ -225,12 +281,17 @@ Test the changed features on:
 - Describe what success looks like
 - Mention any test data or accounts needed
 - Group related tests together
+- **Always specify which user to sign in as** before each test section
+- **Use actual usernames/emails from create_test_data**, not generic role names
+- **Add :fire_extinguisher: Alerts section** if create_test_data needs new users or updates
 
 ### DON'T:
 - Use technical terms (API, endpoint, component, state, etc.)
 - Assume testers know the codebase
 - Skip steps that seem "obvious"
 - Write vague instructions like "test the form"
+- Say "sign in as an admin" without specifying which admin account to use
+- Omit the Alerts section when test data is missing or insufficient
 
 ### Example Good Test Step:
 ```
