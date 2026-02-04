@@ -1,7 +1,7 @@
 ---
 description: Generate a non-technical testing plan for human testers from a PR
 allowed-tools: Bash(git:*), Bash(gh:*), Read, Grep, Glob
-argument-hint: [--comment] [--staging] [PR_NUMBER or PR_URL]
+argument-hint: [--comment] [--staging] [--custom-rules <path>] [PR_NUMBER or PR_URL]
 ---
 
 # Generate QA Testing Plan
@@ -17,6 +17,7 @@ Review changes in a PR and generate a clear, non-technical testing plan that hum
 
 - `--comment`: Post the test plan as a comment on the PR (optional)
 - `--staging`: Generate comprehensive test plan for staging environment (optional)
+- `--custom-rules <path>`: Path to a custom rules file to incorporate into the test plan (optional, defaults to `.claude/test-plan-rules.md` in the project root)
 - No argument: Use the current branch's PR
 - PR number (e.g., `123`): Review that specific PR
 - PR URL: Extract PR number from URL
@@ -30,6 +31,7 @@ Review changes in a PR and generate a clear, non-technical testing plan that hum
 /test-plan --comment 123      # Generate and post as comment on PR #123
 /test-plan --staging 123      # Comprehensive staging test plan for PR #123
 /test-plan --staging --comment 123  # Comprehensive plan, posted as comment
+/test-plan --custom-rules ./qa-rules.md 123  # Use custom rules file
 ```
 
 ## Instructions
@@ -39,7 +41,8 @@ Review changes in a PR and generate a clear, non-technical testing plan that hum
 First, check if `$ARGUMENTS` contains flags:
 - If `--comment` is present, set `POST_COMMENT=true` and remove it from the arguments
 - If `--staging` is present, set `STAGING_MODE=true` and remove it from the arguments
-- Otherwise, set both to `false`
+- If `--custom-rules <path>` is present, set `CUSTOM_RULES_PATH` to the provided path and remove both the flag and the path from the arguments
+- Otherwise, set `POST_COMMENT=false`, `STAGING_MODE=false`, and `CUSTOM_RULES_PATH=""` (empty)
 
 Then identify the PR from the remaining argument:
 - If it's a number, use it directly
@@ -48,6 +51,29 @@ Then identify the PR from the remaining argument:
 ```bash
 gh pr view --json number,title,body,baseRefName,headRefName
 ```
+
+### Step 1.5: Load Project-Specific Test Plan Rules
+
+Load custom rules that should influence how the test plan is generated (e.g., "this project uses magic links instead of password login", "all forms use autosave", "ignore mobile testing").
+
+1. Determine the rules file path:
+   - If `CUSTOM_RULES_PATH` is set, use that path
+   - Otherwise, default to `.claude/test-plan-rules.md` in the project root
+
+2. Use Glob to check if the file exists:
+   - Pattern: the determined path
+
+3. If the file exists, read it and store its contents as `PROJECT_RULES`
+4. If the file does not exist, set `PROJECT_RULES=""` and continue silently (no error)
+
+**When `PROJECT_RULES` is not empty, you MUST apply these rules throughout the entire test plan generation.** The rules may affect:
+- Which login/auth flows to describe (e.g., magic link instead of password)
+- Which areas to skip or emphasize
+- Project-specific terminology or UI patterns
+- Special test data or environment instructions
+- Any other project-specific context that changes how testing should be done
+
+The rules take precedence over the generic defaults in this prompt. For example, if the rules say "this project has no login page, users authenticate via magic link", then test steps should never reference a login page or password field.
 
 ### Step 2: Get PR Information
 
@@ -275,6 +301,7 @@ Test the changed features with each relevant user type from the Test Accounts ta
 ## Guidelines for Writing Test Plans
 
 ### DO:
+- **Apply project-specific rules** from `PROJECT_RULES` when present — they override generic defaults
 - Use plain, simple language
 - Be specific about what to click and where
 - Include exact button names, menu items, field labels
@@ -292,6 +319,7 @@ Test the changed features with each relevant user type from the Test Accounts ta
 - Write vague instructions like "test the form"
 - Say "sign in as an admin" without specifying which admin account to use
 - Omit the Alerts section when test data is missing or insufficient
+- Contradict project-specific rules (e.g., don't reference password login if rules say the project uses magic links)
 
 ### Example Good Test Step:
 ```
